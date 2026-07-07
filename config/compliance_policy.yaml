@@ -1,0 +1,39 @@
+version: "1.0"
+metadata:
+  organization: "Enterprise AI Governance"
+  target_framework: "LangGraph"
+
+regulatory_mappings:
+  unauthorized_action:
+    nist_id: "NIST AI RMF Measure 2.7 (Security & Resilience)"
+    eu_ai_act_id: "Article 12 (Traceability & Logging)"
+  data_leakage:
+    nist_id: "NIST AI RMF Governance 6 (Third-Party Risk)"
+    eu_ai_act_id: "Article 15 (Accuracy, Robustness, & Cybersecurity)"
+
+policy_rules:
+  - id: "rule_01_database_safety"
+    description: "Prevent agents from executing destructive database operations"
+    resource_type: "database"
+    allowed_actions: ["READ", "SELECT"]
+    denied_actions: ["DELETE", "DROP", "UPDATE"]
+    severity: "CRITICAL"
+    fallback_strategy: "BLOCK_AND_ALERT"
+
+  - id: "rule_02_pii_exfiltration"
+    description: "Prevent third-party tools from receiving sensitive user patterns"
+    resource_type: "external_api"
+    blocked_patterns:
+      - '(?i)\b(ssn|social security|tax_id)\b'
+      - '(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})'
+    severity: "HIGH"
+    fallback_strategy: "REDACT_AND_PROCEED"
+
+  - id: "rule_03_financial_threshold"
+    description: "Limit autonomous wire/transfer limits without human-in-the-loop"
+    resource_type: "financial_api"
+    allowed_actions: ["TRANSFER"]
+    max_value_limit: 5000.00
+    currency: "USD"
+    severity: "CRITICAL"
+    fallback_strategy: "FORCE_HUMAN_APPROVAL"
