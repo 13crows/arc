@@ -5,6 +5,20 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
+##################
+# A word on why this ledger exists:
+#
+#  By structuring our ledger to calculate standard SHA-256 hashes and maintain a parent_hash pointer
+#  we have manually implemented a basic cryptographic chain. 
+#  If we (or you) decide to migrate this to Hedera Hashgraph in the future, the pivot is simple:
+#  1. You would import the hedera-sdk-python (or the new hedera-agent-kit-py).
+#  2. Instead of appending the payload to a local .jsonl file 
+#     you would take that exact same JSON payload and submit it as a message to the Hedera Consensus Service (HCS).
+#  3. HCS would natively handle the timestamping, tamper-evident ordering, and consensus 
+#    providing you with a universally verifiable audit trail without changing how the rest of your agentic proxy functions.
+
+#################
+
 class ComplianceLedger:
     def __init__(self, log_path: str = "reports/audit_ledger.jsonl"):
         self.log_path = log_path
