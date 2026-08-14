@@ -1,6 +1,11 @@
 import json
 import os
+import sys
 from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from gateway.ledger import ComplianceLedger
+
 
 def generate_scorecard(ledger_path="reports/audit_ledger.jsonl", output_path="reports/compliance_scorecard.md"):
     if not os.path.exists(ledger_path):
@@ -66,7 +71,11 @@ def generate_scorecard(ledger_path="reports/audit_ledger.jsonl", output_path="re
             md += f"| {ts} | `{resource}` | `{action}` | {nist} | {eu} |\n"
     
     md += "\n## 3. Cryptographic Chain of Custody\n"
-    md += "> **Status: VERIFIED.** All logged actions are cryptographically bound via SHA-256 sequential hashing. No tampering detected in the audit trail.\n"
+    intact = ComplianceLedger(log_path=ledger_path).verify_integrity()
+    if intact:
+        md += "> **Status: VERIFIED.** Every logged action is bound into a SHA-256 hash chain (each record hashes in the previous one). Re-verification of the full ledger detected no modification, deletion, or reordering.\n"
+    else:
+        md += "> **Status: FAILED.** Ledger re-verification detected tampering: a record was modified, deleted, or reordered. This audit trail cannot be trusted.\n"
     
     # Write to Markdown file
     with open(output_path, 'w') as f:
